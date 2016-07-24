@@ -1,0 +1,274 @@
+﻿using UnityEngine;
+using System.Collections;
+
+public class CycleCreator : MonoBehaviour {
+
+	public bool[,] dotMatrix = new bool[30,30];
+	public int dotsCount = 0;
+	public GameObject[] dotList = new GameObject[30];
+
+	public int cycleCount = 0;
+	public int[,] cycleList = new int[200, 17];
+
+	public int RequestNumber (GameObject connectingDot1, GameObject connectingDot2, bool initialDot, GameObject dot) {
+
+		int number = 0; // Quan demanem un nombre també actualitzem la matriu i els cicles.
+
+		for (int i = 0; i < dotList.Length; i++) {
+			if (dotList [i] == null) {
+				dotList [i] = dot;
+				dotsCount++;
+				number = i;
+				break;
+			}
+		}
+
+		if (initialDot) { // Initial matrix set up.
+			
+			for (int i = 0; i < dotsCount; i++) {
+				for (int j = 0; j < dotsCount; j++) {
+					dotMatrix [i, j] = false;
+				}
+			}
+				
+		} else { // We can start creating the matrix connections.
+			int cd1number = connectingDot1.GetComponent<LinesController>().dotNumber;
+			int cd2number = connectingDot2.GetComponent<LinesController>().dotNumber;
+
+			dotMatrix [cd1number, number] = true;
+			dotMatrix [cd2number, number] = true;
+
+			dotMatrix [number, cd1number] = true;
+			dotMatrix [number, cd2number] = true;
+
+			RedoCycles ();
+		}
+			
+		return number;
+	}
+
+	void RedoCycles () {
+		
+		bool[,] cMatrix = RemoveCyclesCopyMatrix ();
+
+		for (int dot = 0; dot < dotsCount * 2; dot++) {
+			
+			bool second = true;
+			bool searchEnded = false;
+
+			int nextPos = 1;
+			Vector2 nextCoord = GetNextCoord (dot, cMatrix);
+
+			int[] cycle = new int[17];
+			for (int i = 0; i < 17; i++) {
+				cycle [i] = -1;
+			}
+			cycle [0] = (int)nextCoord.y;
+
+			if ((int)nextCoord.y == -1)
+				searchEnded = true;
+
+			while (!searchEnded) {
+
+				// Busquem el punt en la línea de la columna del primer punt.
+				for (int i = 0; i < dotsCount; i++) {
+					
+					if (cMatrix [i, (int)nextCoord.y]) {
+
+						if (i == cycle [0]) { // Potser hem tancat el cicle.
+
+							if (second) { // El segon punt no pot tancar un cicle, continuem buscant.
+								second = false;
+							} else { // Hem tancat el cicle
+								cycle [nextPos] = (int)nextCoord.y;
+								SaveCycle (cycle);
+								break;
+							}
+		
+						} else if (i != cycle [nextPos - 1]) { // Podem guardar el punt, no és l'anterior.
+
+							cycle [nextPos] = (int)nextCoord.y;
+							nextPos++;
+							nextCoord.y = i;
+							nextCoord.x = 0;
+							break;
+		
+						} 
+					}
+				}
+
+				if (nextPos == dotsCount || (int)nextCoord.x == -1) // Vol dir que no s'ha trobat cap punt.
+					searchEnded = true;
+
+				nextCoord.x = -1;
+			}
+		}
+
+		CleanCycles ();
+
+		for (int i = 0; i < cycleCount; i++) {
+			string txt = "";
+			if (cycleList[i,0] != -1) {
+				for (int j = 0; j < dotsCount; j++) {
+					if (cycleList [i, j] != -1) {
+						txt += cycleList [i, j] + " ";
+					}
+				}
+				Debug.Log (txt);
+			}
+		}
+	}
+
+	bool HasThreeCons(int dot) {
+		int count = 0;
+		for (int i = 0; i < dotsCount; i++) {
+			if (dotMatrix [dot, i]) {
+				count++;
+			}
+		}
+
+		if (count == 3) {
+			return true;
+		}
+
+		return false;
+	}
+
+	void SaveCycle(int[] cycle) {
+
+		int x = 0;
+		int cycleLenght = 0;
+		bool cycleSaved = false;
+
+		for (int i = 0; i < 200; i++) {
+			if (cycleList [i, 0] == -1) {
+				x = i;
+				foreach (int num in cycle) {
+					if (num != -1) {
+						cycleLenght++;
+					} else {
+						break;
+					}
+				}
+				break;
+			}
+		}
+
+		//Arreglem el doble nombre inicial (Solució cutre)
+		cycleLenght--;
+		if (cycle [0] == cycle [1]) {
+			for (int i = 1; i < cycleLenght; i++) {
+				cycle [i] = cycle [i + 1];
+			}
+		}
+
+		//Excepció del primer cicle
+		if (cycleCount == 0) {
+			
+			for (int j = 0; j < cycleLenght; j++) {
+				cycleList [0, j] = cycle [j];
+			}
+			cycleCount++;
+			cycleSaved = true;
+
+		} else {
+			
+			//Mirem si els cicles son els mateixos o no
+			for (int n = 0; n < cycleCount; n++) {
+				for (int i = 0; i < cycleLenght; i++) {
+				
+					if (!CycleContains (cycle [i], n)) {
+						//Guardem el cicle en cas que no existeixi
+						for (int j = 0; j < cycleLenght; j++) {
+							cycleList [x, j] = cycle [j];
+						}
+						cycleCount++;
+						cycleSaved = true;
+						break;
+					}
+
+				}
+				if (cycleSaved)
+					break;
+			}
+
+		}
+
+	}
+
+	bool CycleContains (int number, int cycle) {
+		for (int i = 0; i < dotsCount; i++) {
+			if (cycleList [cycle, 0] != -1 && cycleList [cycle, i] == number) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	Vector2 GetNextCoord (int dotNumber, bool[,] cMatrix) {
+
+		Vector2 firstCoord = new Vector2 (-1, -1);
+		int dot = 0;
+
+		for (int i = 0; i < dotsCount; i++) {
+
+			if (firstCoord.x != -1)
+				break;
+
+			for (int j = 0; j < dotsCount; j++) {
+
+				if (cMatrix [i, j]) {
+					if (dot == dotNumber) {
+						firstCoord = new Vector2 (i, j);
+						break;
+					} else {
+						dot++;
+					}
+				}
+			}
+		}
+
+		return firstCoord;
+	}
+
+	bool[,] RemoveCyclesCopyMatrix() {
+		bool[,] cMatrix = new bool[30,30]; // Creem la còpia de la matriu i la netejem de punts innecessaris.
+
+		for (int i = 0; i < dotsCount; i++) {
+			for (int j = 0; j < dotsCount; j++) {
+				cMatrix [i, j] = dotMatrix [i, j];
+			}
+		}
+
+		// Netejem la llista de cicles
+		for (int i = 0; i < dotsCount; i++) {
+			for (int j = 0; j < dotsCount; j++) {
+				cycleList [i, j] = -1;
+			}
+		}
+		cycleCount = 0;
+
+		return cMatrix;
+	}
+
+	void CleanCycles() {
+		for (int curCycle = 0; curCycle < cycleCount; curCycle++) {
+			if (cycleList [curCycle, 0] != -1) {
+				for (int j = curCycle + 1; j < cycleCount; j++) {
+					bool sameCycle = true;
+
+					for (int i = 0; i < dotsCount; i++) {
+						if (!CycleContains (cycleList [curCycle, i], j)) {
+							sameCycle = false;
+							break;
+						}
+					}
+
+					if (sameCycle)
+						cycleList [j, 0] = -1;
+				}
+			}
+		}
+	}
+}

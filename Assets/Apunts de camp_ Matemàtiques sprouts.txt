@@ -1,0 +1,116 @@
+# Sense data
+- El programa no funcionava bé, era molt caòtic i no s’entenia massa. El que he fet ha sigut fer un programa amb funcions, que permet editar una part sense carregar-se el programa sencer.
+- El programa a més repeteix la  busca per tots els punts. Això fa que molts estiguin repetits. S’ha de fer un programa que comprovi que això no passi.
+- En la string de caràcters es confonen els nombres de dues xifres.
+- pbtt
+
+# 5 de Juny
+- El unity no reconeix algunes funcions de C# (string.CharAt(), string.IndexOf())
+- No es reconeixen cicles que contenen punts que ja pertanyien a altres cicles.
+- Per reconèixer els cicles mencionats anteriorment, s’hauria de: Passar un cicle acabat a una funció que comprovi si el cicle rebut existeix o no. Si existeix es demana al programa que continui buscant, si no, es posa a la llista. A més, això estalvia haver de mirar cada cop la llista de cicles repetits, ja que només s’ha de mirar un cop.
+- Faré el programa que busca posicions de lletres a mà.
+- El programa no funcionava perquè quan buscava si existia el primer cicle no havia tingut en compte si la llista estava buida.
+- El torrent d’errors de dibuixar línees ha estat eliminat!
+
+# 6 de Juny
+- La llista de cicles s’omple completament de cicles que ja han estat posats…
+- El programa que mira si la llista no funciona, sempre surt -1 per algun motiu. Per algun motiu el FindCycleOf torna 0 i dona fals?
+- No es diferencien cicles que tenen punts amb el nombre de dues xifres. Possible solució: Fer servir lletres.
+
+# 17 de Juny
+- En comptes de lletres faig servir comes, cal canviar el programa perquè reconegui comes i nombres de cues xifres.
+- Per algun motiu el programa ha decidit no funcionar. En comptes de tornar cicles torna els cicles en 1111 2222 4444 etc...
+- Estic fent un programa que reconeix nombres separats en comes. Pero com a aprenentatge: Cal tenir en compte tots el casos que poden passar perquè no si no el programa es torna molt caòtic i surten errors molt extranys.
+- Per saber quants nombres tenim sense comptar comes un cicle serà escrit així: l:a,b,c,d...
+- Deixar de complicar els arrays i fer una classe pròpia per guardar els cicles?
+
+# 19 de Juny
+- Passo de fer servir strings a fer servir stacks. És possible que sigui necessària una reescriptura del programa.
+
+- Asco de unity que fa el que li dona la gana amb el c#... Quan li ve de gust dóna excepcions però en un compilador normal el codi funciona.
+
+# 21 de Juny
+- Reevaluació del programa: El problema és que no sap tractar punts que tenen dos o tres cicles. Per evitar això faré:
+	- Una primera evaluació dels punts que cal tractar (Cal copiar la matriu per evitar problemes). Primer es miren els punts que només contenen un cicle. Llavors es busquen els cicles amb aquests punts. Els cicles repetits són eliminats, i després s’eliminen dits punts de la matriu copiada.
+	- Després es tornen a buscar cicles amb els punts que ténen dos o tres. Es repeteixen els passos anteriors un altre cop, i es torna a fer amb els punts restants, els de tres cicles, si n’hi ha cap.
+	- Un cop s’han classificat tots els cicles es pot passar a buscar-los topogràficament.
+
+- Per altre banda, per guardar els cicles es guardaran en una matriu de dues dimensions, Per exemple:
+	- Matriu [4 (Llargada), 1, 3, 5, 2]
+			 [5 (Llargada), 2, 6, 3, 10, 3]
+			 [3 (Llargada), 5, 4, 13]
+
+- Per comparar cicles, en comptes de buscar la posició de cada punt a l’altre cicle, es farà:
+	- Mirar que siguin de la mateixa llargada. Per simplificar la tasca, el primer valor és la llargada, i per tant es comparen aquests.
+	- Agafar el cicle en questió, i repetir això amb tots els cicles de la matriu:
+		- Es mira que el cicle que es va a comparar no sigui un cicle eliminat, que té com a primer valor -1, o que siguin de diferent llargada. En qualsevol dels dos casos, es passa al següent cicle.
+		- Es recorre per tots els valors del cicle, i de cada un es demana si existeix el valor a l’altre cicle (Bool). 
+			- En cas de que surti negatiu en algun moment, no són el mateix cicle, i es passa al següent cicle. 
+			- En cas que es pugui recorrer tot el cicle complet, el cicle ja està repetit, i es canvia el seu primer valor per -1. Això farà que sigui ignorat per el programa. (L’altre solució era eliminar el cicle i pujar la resta tots una posició, però és massa lenta.)
+
+# 22 de Juny
+- Cal treure els punts que només tenen una connexió.
+- No pots copiar objectes directament, ja que crea referències en comptes de còpies exactes.
+
+# 23 de Juny
+- El programa torna a nombre de punts -1??
+
+# 25 de Juny
+- He redissenyat (un altre cop) el buscador de cicles, primer dibuixant un esquema. Ara és molt més net i he pogut veure errors en el programa que abans no sabia com solucionar.
+
+# 26 de Juny
+- Encara a vegades torna -1 al nombre de punts. És possible que sigui que es guarda al prefab del punt -1 per algun motiu.
+- NextCoord és -1???
+- Era culpa del GetNextCoord
+
+# 28 de Juny
+- Cal canviar quatre coses perquè el programa reconegui cicles que ténen varis punts en comú.
+- Backtracking?
+
+# 30 de Juny
+- Implementació de la busca de cicles a la inversa (Des del final del cicle, es busquen punts i es continua buscant per allà.)
+- O seria millor buscar en cada punt totes les connexions, i d’aqui buscar la resta de cicles (sense inversa).
+
+# 1 de Juliol
+- Creem un segon cicle copiat del primer, que anem modificant en funció dels punts que ténen tres connexions.
+
+# 2 de Juliol 
+- Cal reconsiderar el programa, seria possible fer que es guardés els punts que ténen 3 connexions i que resumís la busqueda des d allà?
+- No no. Es busquen els punts amb tres connexions. A partir dels punts es busquen si es poden unir. 
+- Si es poden unir vol dir que hi ha un cicle no descobert entre ells.
+- Llavors agafem i busquem els punts que no són del cicle original entre ells, i creem el cicle.
+
+# 3 de Juliol
+- Canviarem el codi a que busqui només a on hem creat una aresta, això simplifica la busca.
+- Observacions:
+	- Els cicles no es destrueixen
+
+# 5 de Juliol
+- Els cicles ja són més ben fets.
+- Ara toca crear els polígons.
+
+# 7 de Juliol
+- Els cicles tornaven -1 perquè el programa buscava el punt abans de que digues a dit punt quin era el seu nombre, i el nombre per defecte és -1, que mai trobaria.
+- Hi han algunes excepcions en buscar cicles que cal arreglar:
+	- No es troben els cicles de tres punts. (Resolt)
+	- El buscador no dóna prioritat a buscar primer el punt per tancar el cicle (Resolt)
+- En principi ja troba tots els cicles/regions. Ara cal fer que les regions tinguin la forma del cicle i no simplement seguir els punts. "En resum: Ja es troben els cicles."
+- Tampoc guardem els cicles, ja que només ens interessen innicialment per crear la regió.
+
+# 8 de Juliol
+- Les linees ja saben de quin punt a quin van.
+
+# 9 de Juliol
+- "Ja es dibuixen les regions"
+- Encara hi han alguns cicles que no es troben.
+- Les regions no van si son al revés...
+
+# 12 de Juliol
+- Les regions ara ja es dibuixen correctament.
+- Creant el programa que detecta els punts que toca.
+
+# 13 de Juliol
+- Es troben *casi* tots els cicles, he arreglat un error que feia que el programa acceptés punts ja trobats com a correctes.
+
+# 15 de Juliol
+- Estic començant a fer la part que reconeix si dos punts es poden connectar.
