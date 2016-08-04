@@ -4,7 +4,7 @@ using System.Collections;
 public class RegionCollider : MonoBehaviour {
 
 	public int regionNumber = -1;
-	public int[] cycle = new int[17];
+	public Vertice[] cycle = new Vertice[17];
 	public int count = 0;
 
 	public bool firstTime = true;
@@ -25,7 +25,7 @@ public class RegionCollider : MonoBehaviour {
 			int j = 0;
 			while (!regionAdded && j < cycleCreator.dotsCount) {
 				LinesController dot = cycleCreator.dotList [j].GetComponent<LinesController> ();
-				if (cycle [i] == dot.dotNumber) {
+				if (cycle [i].number == dot.dotNumber) {
 					dot.regions [dot.numOfRegions] = regionNumber;
 					dot.numOfRegions++;
 					dots [i] = cycleCreator.dotList [j];
@@ -53,13 +53,21 @@ public class RegionCollider : MonoBehaviour {
 			if (firstTime) {
 				int numOfConnections = other.gameObject.GetComponent<LinesController> ().activeLine;
 				if (numOfConnections == 0) {
-					other.gameObject.GetComponent<LinesController> ().regions [0] = regionNumber;
-					other.gameObject.GetComponent<LinesController> ().numOfRegions++;
+					if (other.gameObject.GetComponent<LinesController> ().regions [0] == 0) {
+						other.gameObject.GetComponent<LinesController> ().regions [0] = regionNumber;
+					} else {
+						other.gameObject.GetComponent<LinesController> ().regions [1] = regionNumber;
+						other.gameObject.GetComponent<LinesController> ().numOfRegions++;
+					}
 				}
 			} else {
 				regionCreator.insideARegion = true;
-				other.gameObject.GetComponent<LinesController> ().regions [0] = regionNumber;
-				other.gameObject.GetComponent<LinesController> ().numOfRegions = 1;	
+				if (other.gameObject.GetComponent<LinesController> ().regions [0] == 0) {
+					other.gameObject.GetComponent<LinesController> ().regions [0] = regionNumber;
+				} else {
+					other.gameObject.GetComponent<LinesController> ().regions [other.gameObject.GetComponent<LinesController> ().numOfRegions] = regionNumber;
+					other.gameObject.GetComponent<LinesController> ().numOfRegions++;	
+				}
 			}
 		}
 	}

@@ -7,12 +7,29 @@ public class CheckEndGame : MonoBehaviour {
 
 	CycleCreator cCreator;
 
+	bool playerTurn = false;
+	public bool gameEnded = false;
+	public GameObject player1;
+	public GameObject player2;
+	public GameObject win;
+
 	void Start () {
 		cCreator = gameObject.GetComponent<CycleCreator> ();
 	}
 	
 	void Update () {
-	
+		playerTurn = gameObject.GetComponent<CycleCreator> ().playerTurn;
+		if (!gameEnded) {
+			if (!playerTurn) {
+				player1.GetComponent<SpriteRenderer> ().color = Color.white;
+				player2.GetComponent<SpriteRenderer> ().color = new Color (1, 1, 1, 0);
+			} else {
+				player2.GetComponent<SpriteRenderer> ().color = Color.white;
+				player1.GetComponent<SpriteRenderer> ().color = new Color (1, 1, 1, 0);
+			}
+		} else {
+			win.GetComponent<SpriteRenderer> ().color = Color.white;
+		}
 	}
 
 	public void CanEnd() {
@@ -31,8 +48,8 @@ public class CheckEndGame : MonoBehaviour {
 			}
 		}
 
-		if (!canPlay) 
-			Debug.Log ("Game ended!");
+		if (!canPlay)
+			gameEnded = true;
 		
 	}
 
@@ -50,7 +67,7 @@ public class CheckEndGame : MonoBehaviour {
 		if (dots [dot1].isFrontier || dots [dot2].isFrontier) {
 			for (int i = 0; i < dots [dot1].numOfRegions; i++) {
 				for (int j = 0; j < dots [dot2].numOfRegions; j++) {
-					if (dots [dot1].regions [i] == dots [dot2].regions [j]) {
+					if (dots [dot1].regions [i] == dots [dot2].regions [j] && dots [dot1].regions [i] != -1 && dots [dot2].regions [j] != -1) { // Si dos punts vius que són frontera comparteixen una regió, es poden connectar
 						canConnect = true;
 					}
 				}
@@ -59,12 +76,14 @@ public class CheckEndGame : MonoBehaviour {
 			canConnect = true;
 			for (int i = 0; i < dots [dot1].numOfRegions; i++) {
 				for (int j = 0; j < dots [dot2].numOfRegions; j++) {
-					if (dots [dot1].regions [i] != dots [dot2].regions [j]) {
-						canConnect = false;
+					if (dots [dot1].regions [i] != dots [dot2].regions [j] && dots [dot1].regions [i] != -1 && dots [dot2].regions [j] != -1) { // Si dos punts vius que no són frontera no comparteixen una regió, no es poden connectar
+						canConnect = false;	
 					}
 				}
 			}
 		}
+
+		Debug.Log ("Checking dots " + dot1 + " iF: " + dots [dot1].isFrontier + " & " + dot2 + " iF: " + dots [dot2].isFrontier + " Can connect " + canConnect);
 
 		return canConnect;
 	}

@@ -3,14 +3,12 @@ using System.Collections;
 
 public class RegionCreator : MonoBehaviour {
 
-	public int[] dots;
+	public Vertice[] dots;
 	public bool makeCycle = false;
 
 	public int precision = 4;
 	int vCounts;
 	Vector2[] path = new Vector2[150];
-
-	public int[] lastCreatedRegion = new int[17];
 
 	public int numberOfRegions = 0;
 
@@ -27,8 +25,7 @@ public class RegionCreator : MonoBehaviour {
 		}
 	}
 
-	public void CreateRegion (int[] dots) {
-		lastCreatedRegion = dots;
+	public void CreateRegion (Vertice[] dots) {
 		GameObject region = new GameObject ();
 
 		region.AddComponent<PolygonCollider2D> ();
@@ -36,7 +33,7 @@ public class RegionCreator : MonoBehaviour {
 
 		int count = 0;
 		for (int i = 0; i < dots.Length; i++) {
-			if (dots [i] != -1)
+			if (dots [i].number != -1)
 				count++;
 		}
 
@@ -45,12 +42,12 @@ public class RegionCreator : MonoBehaviour {
 
 		for (int step = 0; step < count; step++) {
 			
-			int start = dots [step];
+			int start = dots [step].number;
 			int end;
 			if (step != count - 1) {
-				end = dots [step + 1];
+				end = dots [step + 1].number;
 			} else {
-				end = dots [0];
+				end = dots [0].number;
 			}
 			RaycastHit2D[] hits = Physics2D.CircleCastAll (gameObject.transform.position, 2000, new Vector3 (1, 0, 0));
 			GameObject[] colls = new GameObject[hits.Length];

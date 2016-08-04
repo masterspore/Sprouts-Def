@@ -4,6 +4,9 @@ using System.Collections;
 
 public class LinesController : MonoBehaviour {
 
+	public Color player1Color;
+	public Color player2Color;
+
 	public GameObject[] lines = new GameObject[3];
 	public int activeLine = 0;
 
@@ -85,6 +88,13 @@ public class LinesController : MonoBehaviour {
 			RaycastHit2D hit = Physics2D.Raycast (ray.origin, ray.direction, Mathf.Infinity, layer);
 
 			if (hit && hit.collider.gameObject == gameObject && activeLine < 3) {
+
+				if (gameManager.GetComponent<CycleCreator> ().playerTurn) {
+					line.GetComponent<LineRenderer> ().SetColors (player1Color, player1Color);
+				} else {
+					line.GetComponent<LineRenderer> ().SetColors (player2Color, player2Color);
+				}
+
 				line.GetComponent<lineAwake>().parent = gameObject;
 				Instantiate(line);
 				lastMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -132,6 +142,7 @@ public class LinesController : MonoBehaviour {
 		}
 
 		if (Input.GetMouseButtonUp (0) && activeLine < 3 && lines [activeLine] != null) {
+			lines [activeLine].GetComponent<LineRenderer> ().SetColors (Color.black, Color.black);
 			ResetLine();
 		}
 

@@ -114,3 +114,25 @@
 
 # 15 de Juliol
 - Estic començant a fer la part que reconeix si dos punts es poden connectar.
+
+# 24 de Juliol
+- Ara la llista no són nombres, si no objectes Vertice, que contenen: El nombre, si té tres connexions, i si ja l hem usat.
+
+# 26 de Juliol
+- He fet un mini-backtracking que fa trobar tots el cicles.
+- Per algun motiu aquest mètode es salta el punt següent a la bifurcació.
+
+# 28 de Juliol
+- El backtracking ja no funciona??
+
+# 29 de Juliol
+- Deixo una mica de banda el backtracking, me n vaig a mirar si puc veure com pus saber si la partida ha acabat.
+
+# 2 Agost
+- Per què es pensa que coincideixen les regioooons.......
+
+# 3 Agost
+- Tot i que el programa és funcional, cal refinar moltes coses: 
+	- Com considerem quins punts pertanyen a quines regions 
+	- El fet de comparar punts 
+	- Trobar tots els cicles (Aquell cas que se ns escapa de les mans)

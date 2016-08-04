@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System;
 
 public class CycleCreator : MonoBehaviour {
 
@@ -7,15 +9,21 @@ public class CycleCreator : MonoBehaviour {
 	public int dotsCount = 0;
 	public GameObject[] dotList = new GameObject[30];
 
-	public int cycleCount = 0;
-	public int[,] cycleList = new int[200, 30];
-
 	RegionCreator rCreator;
 
 	public bool playerTurn = false;
 
+	public bool checkEndGame = false;
+
 	void Start () {
 		rCreator = gameObject.GetComponent<RegionCreator> ();
+	}
+
+	void Update () {
+		if (checkEndGame) {
+			gameObject.GetComponent<CheckEndGame> ().CanEnd ();
+			checkEndGame = false;
+		}
 	}
 
 	public int RequestNumber (GameObject connectingDot1, GameObject connectingDot2, bool initialDot, GameObject dot) {
@@ -52,7 +60,7 @@ public class CycleCreator : MonoBehaviour {
 			dotMatrix [number, cd2number] = true;
 
 			MakeCycle (cd1number, number, cd2number);
-			gameObject.GetComponent<CheckEndGame> ().CanEnd ();
+			checkEndGame = true;
 		}
 
 		playerTurn = !playerTurn;
@@ -61,16 +69,21 @@ public class CycleCreator : MonoBehaviour {
 	}
 
 	void MakeCycle (int dot0, int dot1, int dot2) {
-		int[] cycle = new int[30];
+		Vertice[] cycle = new Vertice[30];
 		for (int i = 3; i < 30; i++) {
-			cycle [i] = -1;
+			cycle [i] = new Vertice(-1, false, false);
 		}
-		cycle [0] = dot0;
-		cycle [1] = dot1;
-		cycle [2] = dot2;
+		cycle [0] = new Vertice(dot0, false, false);
+		cycle [1] = new Vertice(dot1, false, false);
+		cycle [2] = new Vertice(dot2, false, false);
 
-		if (ConnectionsOfDot (cycle [2]) > 1 && ConnectionsOfDot (cycle [0]) > 1) { // Si el punt té més d'una connexió
-			Debug.Log("Possible cycle with dot " + cycle[1]);
+		if (ConnectionsOfDot(cycle[2].number) == 3) {
+			cycle[2].hasThreeConnections = true;
+			Debug.Log (cycle[2].number + " marked for possible revision.");
+		}
+
+		if (ConnectionsOfDot (cycle [2].number) > 1 && ConnectionsOfDot (cycle [0].number) > 1) { // Si el punt té més d'una connexió
+			//Debug.Log("Possible cycle with dot " + cycle[1].number);
 
 			bool cycleFound = false;
 			int targetDot = 0;
@@ -78,17 +91,17 @@ public class CycleCreator : MonoBehaviour {
 			bool dot1found = false;
 			int i = 0;
 			while (!dot1found) {
-				if (dotMatrix [i, cycle [2]]) {
-					if (ConnectionsOfDot (i) > 1 && i != cycle[1]) {
+				if (dotMatrix [i, cycle [2].number]) {
+					if (ConnectionsOfDot (i) > 1 && i != cycle[1].number) {
 						dot1found = true;
 						targetDot = i;
-						Debug.Log ("Target " + targetDot);
+						//Debug.Log ("Target " + targetDot);
 
-						if (targetDot == cycle [0]) {
+						if (targetDot == cycle [0].number) {
 							cycleFound = true;
 							rCreator.makeCycle = true;
 							rCreator.dots = cycle;
-
+							SetFrontierOf (cycle);
 							Debug.Log ("Region found");
 						}
 					}
@@ -109,15 +122,15 @@ public class CycleCreator : MonoBehaviour {
 
 					if (dotMatrix[num, targetDot]) {
 
-						if (searchState == 0) {
-							Debug.Log ("Looking @ dot " + num + ". Trying to find " + cycle [0] + ", from " + targetDot);
+						/*if (searchState == 0) {
+							Debug.Log ("Looking @ dot " + num + ". Trying to find " + cycle [0].number + ", from " + targetDot);
 						} else {
 							Debug.Log ("Looking @ dot " + targetDot);
-						}
+						}*/
 
-						if (searchState == 0 && num == cycle [0]) { // Hem tancat el cicle
+						if (searchState == 0 && num == cycle [0].number) { // Hem tancat el cicle
 						
-							cycle [cycleLength] = targetDot;
+							cycle [cycleLength].number = targetDot;
 							dotFound = true;
 							cycleFound = true;
 							rCreator.makeCycle = true;
@@ -125,11 +138,11 @@ public class CycleCreator : MonoBehaviour {
 							SetFrontierOf (cycle);
 							Debug.Log ("Region found");
 
-						} else if (searchState == 1 && num != cycle [cycleLength - 1] && !CycleContains(cycle, num)) { // Hem trobat el següent punt
+						} else if (searchState == 1 && num != cycle [cycleLength - 1].number && !CycleContains(cycle, num)) { // Hem trobat el següent punt
 
 							if (ConnectionsOfDot (num) > 1) {
-								Debug.Log ("Found dot " + targetDot);
-								cycle [cycleLength] = targetDot;
+								//Debug.Log ("Found dot " + targetDot);
+								cycle [cycleLength].number = targetDot;
 								dotFound = true;
 								targetDot = num;
 								cycleLength++;
@@ -140,11 +153,11 @@ public class CycleCreator : MonoBehaviour {
 				
 					if (num == dotsCount - 1) { // No existeix un cicle
 						if (searchState == 0) { // Hem acabat de buscar el punt de connexió
-							Debug.Log ("Into state 1");
+							//Debug.Log ("Into state 1");
 							searchState = 1;
 							num = 0;
 						} else if (searchState == 1) {
-							Debug.Log ("No region found");
+							Debug.Log ("No region found " + ReviseCycle<bool> (cycle, 2));
 							dotFound = true;
 							cycleFound = true;
 						}
@@ -159,10 +172,43 @@ public class CycleCreator : MonoBehaviour {
 		}
 	}
 
-	bool CycleContains (int[] cycle, int num) {
+	T ReviseCycle <T> (Vertice[] cycle, int option) { // 0 = cycleLenght, 1 = The actual cycle, 2 = May have other cycles
+
+		Debug.Log ("Revise cycle");
+
+		bool foundDot = false;
+		int lastDotFound = 0;
+		
+		for (int i = cycle.Length-1; i >= 0; i--) {
+			if (cycle[i].number != -1) {
+				if (cycle[i].hasThreeConnections && !cycle[i].used && !foundDot) {
+					cycle [i].toUse = true;
+					foundDot = true;
+					lastDotFound = i;
+				}
+			}
+		}
+
+		if (foundDot) {
+			Debug.Log ("Dot " + cycle[lastDotFound].number + " is at pos " + lastDotFound);
+		}
+
+		if (option == 2) {
+			return (T) Convert.ChangeType(foundDot, typeof(T));
+		} else if (option == 0) {
+			return (T) Convert.ChangeType(lastDotFound, typeof(T));
+		} else {
+			for (int i = lastDotFound+1; i < cycle.Length; i++) {
+				cycle [i] = new Vertice (-1, false, false);
+			}
+			return (T) Convert.ChangeType(cycle, typeof(T));
+		}
+	} 
+
+	bool CycleContains (Vertice[] cycle, int num) {
 		bool contains = false;
-		foreach (int i in cycle) {
-			if (i == num)
+		foreach (Vertice i in cycle) {
+			if (i.number == num)
 				contains = true;
 		}
 		return contains;
@@ -177,10 +223,10 @@ public class CycleCreator : MonoBehaviour {
 		return count;
 	}
 
-	void SetFrontierOf (int[] cycle) {
+	void SetFrontierOf (Vertice[] cycle) {
 		for (int i = 0; i < dotsCount; i++) {
 			for (int j = 0; j < cycle.Length; j++) {
-				if (dotList [i].GetComponent<LinesController> ().dotNumber == cycle [j]) {
+				if (dotList [i].GetComponent<LinesController> ().dotNumber == cycle [j].number) {
 					dotList [i].GetComponent<LinesController> ().isFrontier = true;
 				}
 			}

@@ -55,6 +55,7 @@
      <Compile Include="Assets\Scripts\Math\CycleCreator.cs" />
      <Compile Include="Assets\Scripts\Math\RegionCollider.cs" />
      <Compile Include="Assets\Scripts\Math\RegionCreator.cs" />
+     <Compile Include="Assets\Scripts\Math\Vertice.cs" />
      <Compile Include="Assets\Scripts\_GameManager.cs" />
      <None Include="Assets\Scripts\Math\CycleCreator.txt" />
      <None Include="Assets\Apunts de camp_ Matemàtiques sprouts.txt" />
